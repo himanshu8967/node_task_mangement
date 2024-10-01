@@ -178,30 +178,53 @@ router.delete("/delete/:taskID", jwtAuthMiddleware, async (req, res) => {
 
 
 
-// GET route to retrieve all tasks
+// GET route to retrieve all tasks with pagination
 router.get("/getalltask", jwtAuthMiddleware, async (req, res) => {
     try {
         const currentUser = req.user;
         let tasks;
 
-        // If the current user is an admin, fetch all tasks
+        // Pagination setup
+        const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+        const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page if not provided
+        const skip = (page - 1) * limit;
+
+        // If the current user is an admin, fetch all tasks with pagination
         if (currentUser.role === "admin") {
-            tasks = await Task.find({}, "title description dueDate status priority assignedUser");
+            tasks = await Task.find({}, "title description dueDate status priority assignedUser")
+                .skip(skip)
+                .limit(limit);
         } else if (currentUser.role === "user") {
-            // If the user is a regular user, fetch tasks they created or tasks assigned to them
+            // If the user is a regular user, fetch tasks they created or tasks assigned to them with pagination
             tasks = await Task.find({
                 $or: [
                     { assignedUser: currentUser._id },   // Tasks assigned to the user
-                    { createdBy: currentUser._id }       // Tasks created by the user (assuming you have a createdBy field)
+                    { createdBy: currentUser._id }       // Tasks created by the user
                 ]
-            }, "title description dueDate status priority assignedUser");
+            }, "title description dueDate status priority assignedUser")
+                .skip(skip)
+                .limit(limit);
         } else {
             // Return 403 if the user's role is neither admin nor user
             return res.status(403).json({ error: "Unauthorized role" });
         }
 
-        // Respond with the retrieved tasks
-        res.status(200).json({ tasks });
+        // Respond with the retrieved tasks and pagination metadata
+        const totalTasks = await Task.countDocuments(currentUser.role === "admin" ? {} : {
+            $or: [
+                { assignedUser: currentUser._id },
+                { createdBy: currentUser._id }
+            ]
+        });
+
+        res.status(200).json({
+            tasks,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(totalTasks / limit),
+                totalTasks,
+            }
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Internal Server Error" });

@@ -35,9 +35,7 @@ const userSchema = new mongoose.Schema({
     enum: ["user", "admin"],
     default: "user",
   },
-  createdby:{
-    
-  },
+  
 });
 
 userSchema.pre("save", async function (next) {
