@@ -12,8 +12,8 @@ const userRoutes = require('./routes/userRoutes');
 const candidateRoutes = require('./routes/taskRoutes');
 
 // Use the routers
-app.use('/user', userRoutes);
-app.use('/task', candidateRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/task', candidateRoutes);
 
 
 app.listen(PORT, ()=>{

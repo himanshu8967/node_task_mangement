@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
+const User = require("./models/user");
+// const User = require("./../models/user");
 
-const jwtAuthMiddleware = (req, res, next) => {
+const jwtAuthMiddleware = async (req, res, next) => {
 
     // first check request headers has authorization or not
     const authorization = req.headers.authorization
@@ -15,7 +17,8 @@ const jwtAuthMiddleware = (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // Attach user information to the request object
-        req.user = decoded
+        
+        req.user = await User.findById(decoded.id);
         next();
     }catch(err){
         console.error(err);

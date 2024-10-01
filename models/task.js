@@ -22,15 +22,21 @@ const taskSchema = new mongoose.Schema({
     required: true,
   },
   assignedUser: {
-    type: 'string',
-    
-  },
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+},
   priority: {
     type: String,
     enum: ['Low', 'Medium', 'High'],
     default: 'Medium',
     required: true,
   },
+  createdby: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+},
 }, {
   timestamps: true, // This adds createdAt and updatedAt timestamps automatically
 });

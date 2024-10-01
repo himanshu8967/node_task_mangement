@@ -8,11 +8,6 @@ router.post("/signup", async (req, res) => {
     try {
         const data = req.body; // Assuming the request body contains the User data
 
-        // Check if there is already an admin user
-        const adminUser = await User.findOne({ role: "admin" });
-        if (data.role === "admin" && adminUser) {
-            return res.status(400).json({ error: "Admin user already exists" });
-        }
 
         // Check if a user with the gmail id already exists
         const existingUser = await User.findOne({ gamil: data.gmail });
@@ -92,6 +87,25 @@ router.get("/profile", jwtAuthMiddleware, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+router.get("/users", jwtAuthMiddleware, async (req, res) => {
+    try {
+        const currentUser = req.user;
+
+        // If the current user is an admin, return all users with selected fields
+        if (currentUser.role === 'admin') {
+            const users = await User.find({}, "name email role");
+            return res.status(200).json({ users });
+        } else {
+            // If not an admin, return only the current user's info in list format
+            const user = await User.find({ _id: req.user._id }, "name email role");
+            return res.status(200).json({ users: user });
+        }
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
